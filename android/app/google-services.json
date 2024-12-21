@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "850741063556",
+    "project_id": "fire-safety-6370b",
+    "storage_bucket": "fire-safety-6370b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:850741063556:android:7f9b3e52bdaa86ec0837d1",
+        "android_client_info": {
+          "package_name": "com.example.fire_safety_suffolk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWNZiLVGSc3VaYusRXHmQAJO75jL6P808"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
