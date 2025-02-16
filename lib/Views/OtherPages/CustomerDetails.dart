@@ -176,32 +176,49 @@ class _CustomerdetailsState extends State<Customerdetails> {
               ),
               SizedBox(height: mq.height * 0.02),
               Purplebutton(
-                ontap: () async {
-                  String customerId =
-                      DateTime.now().millisecondsSinceEpoch.toString();
-
-                  await fireStore.collection("data").add({
-                    "customerId": customerId,
-                    "customerSerial": serielController.text,
-                    "customerName": nameController.text,
-                    "customerAddress1": address1Controller.text,
-                    "customerAddress2": address2Controller.text,
-                    "customerAddress3": address3Controller.text,
-                    "customerPostal_code": postalCodeController.text,
-                    "currentDate":
-                        DateFormat('dd/MM/yyyy').format(selectedDate),
-                  });
-
-                  Get.snackbar("Success", "Added successfully");
-                  Get.to(() => Contractordetails(
-                        docName: customerId.toString(),
-                      ));
-                },
+                ontap: () async {},
                 text: "Save",
               ),
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: Row(
+        children: [
+          InkWell(
+            onTap: () async {
+              String customerId =
+                  DateTime.now().millisecondsSinceEpoch.toString();
+
+              await fireStore.collection("data").add({
+                "customerId": customerId,
+                "customerSerial": serielController.text,
+                "customerName": nameController.text,
+                "customerAddress1": address1Controller.text,
+                "customerAddress2": address2Controller.text,
+                "customerAddress3": address3Controller.text,
+                "customerPostal_code": postalCodeController.text,
+                "currentDate": DateFormat('dd/MM/yyyy').format(selectedDate),
+              });
+
+              Get.snackbar("Success", "Added successfully");
+              Get.to(() => Contractordetails(
+                    docName: customerId.toString(),
+                  ));
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: MyColors.greenColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              width: mq.width * 0.1,
+              height: mq.height * 0.05,
+              child: Center(
+                child: Text("Next"),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
