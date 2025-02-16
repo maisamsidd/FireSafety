@@ -1,51 +1,95 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fire_safety_suffolk/Utils/Apis/apis.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
-import 'package:fire_safety_suffolk/main.dart';
+import 'package:fire_safety_suffolk/Views/OtherPages/detectors.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
-class AddDetectors extends StatelessWidget {
-  const AddDetectors({super.key});
+class AddDetectors extends StatefulWidget {
+  final String docName;
+  const AddDetectors({super.key, required this.docName});
+
+  @override
+  State<AddDetectors> createState() => _AddDetectorsState();
+}
+
+String detector = "Detectors";
+
+class _AddDetectorsState extends State<AddDetectors> {
+  final fireStore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
-    mq = MediaQuery.of(context).size;
-    int num = 0;
+    final mq = MediaQuery.of(context).size;
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: MyColors.redColor,
+        title: const Text("Add Detectors"),
       ),
       backgroundColor: MyColors.greYColor,
       body: Column(
         children: [
           GestureDetector(
-            onTap: () {
-              MyApis.addDetectorsCollection
-                  .add({"detectors": "Detector${num += 1}"});
+            onTap: () async {
+              try {
+                final snapshot = await fireStore
+                    .collection("data")
+                    .doc(widget.docName)
+                    .collection("details")
+                    .get();
+
+                int nextNumber = snapshot.docs.length + 1;
+                String newDetector = "Detector $nextNumber";
+
+                final existingDetector = await fireStore
+                    .collection("data")
+                    .doc(widget.docName)
+                    .collection("details")
+                    .doc(newDetector)
+                    .get();
+
+                if (!existingDetector.exists) {
+                  await fireStore
+                      .collection("data")
+                      .doc(widget.docName)
+                      .collection("details")
+                      .doc(newDetector)
+                      .set({
+                    "detectors": newDetector,
+                    "number": nextNumber,
+                  });
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Detector added successfully')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Detector already exists')),
+                  );
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $e')),
+                );
+              }
             },
             child: Container(
               width: double.infinity,
-              height: mq.height * 0.15,
+              height: mq.height * 0.1,
               color: MyColors.blackColor,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25),
-                child: Center(
-                  child: Container(
-                    width: mq.width * 0.15,
-                    height: mq.width * 0.03,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      color: MyColors.purpleColor,
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Add Detector",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: MyColors.whiteColor,
-                        ),
-                      ),
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: MyColors.purpleColor,
+                  ),
+                  child: Text(
+                    "Add Detector",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: MyColors.whiteColor,
                     ),
                   ),
                 ),
@@ -54,35 +98,45 @@ class AddDetectors extends StatelessWidget {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: MyApis.addDetectorsCollection.snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              stream: fireStore
+                  .collection("data")
+                  .doc(widget.docName)
+                  .collection("details")
+                  .orderBy("number")
+                  .snapshots(),
+              builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return const Center(
-                    child: Text("Some error occurred"),
-                  );
+                  return const Center(child: Text("Some error occurred"));
                 } else if (snapshot.connectionState ==
                     ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 }
 
-                // Check if the snapshot has data and if it's empty
                 final docs = snapshot.data?.docs ?? [];
                 if (docs.isEmpty) {
-                  return const Center(
-                    child: Text("No detectors found"),
-                  );
+                  return const Center(child: Text("No detectors found"));
                 }
 
                 return ListView.builder(
-                  itemCount:
-                      docs.length, // Set the itemCount to avoid RangeError
+                  itemCount: docs.length,
                   itemBuilder: (context, index) {
+                    String detectorName = docs[index]["detectors"].toString();
+                    String detectorId = docs[index].id;
+
                     return ListTile(
-                      title: Text(
-                        docs[index]["detectors"].toString(),
-                        style: TextStyle(color: MyColors.whiteColor),
+                      title: InkWell(
+                        onTap: () {
+                          Get.to(() => Detectors(
+                                docName: widget.docName,
+                                detectorId: detectorId,
+                                detectorName: detectorName,
+                              ));
+                        },
+                        child: Text(
+                          detectorName,
+                          style: TextStyle(
+                              color: MyColors.whiteColor, fontSize: 16),
+                        ),
                       ),
                     );
                   },
@@ -91,67 +145,6 @@ class AddDetectors extends StatelessWidget {
             ),
           ),
         ],
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Row(
-          children: [
-            const SizedBox(width: 40),
-            Container(
-              width: mq.width * 0.05,
-              height: mq.height * 0.06,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: MyColors.redColor,
-              ),
-              child: Center(
-                child: Text(
-                  "<---",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: MyColors.whiteColor,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            Container(
-              width: mq.width * 0.05,
-              height: mq.height * 0.06,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: MyColors.purpleColor,
-              ),
-              child: Center(
-                child: Text(
-                  "Save",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: MyColors.whiteColor,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            Container(
-              width: mq.width * 0.05,
-              height: mq.height * 0.06,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: MyColors.greenColor,
-              ),
-              child: Center(
-                child: Text(
-                  "Next",
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: MyColors.whiteColor,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -1,7 +1,10 @@
-import 'package:fire_safety_suffolk/Utils/Apis/apis.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fire_safety_suffolk/Utils/purpleButton.dart';
+import 'package:fire_safety_suffolk/Views/OtherPages/ContractorDetails.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../Utils/AppColors.dart';
 import '../../main.dart';
@@ -14,15 +17,17 @@ class Customerdetails extends StatefulWidget {
 }
 
 class _CustomerdetailsState extends State<Customerdetails> {
+  TextEditingController address1Controller = TextEditingController();
+  TextEditingController address2Controller = TextEditingController();
+  TextEditingController address3Controller = TextEditingController();
+  TextEditingController postalCodeController = TextEditingController();
+  TextEditingController serielController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  DateTime selectedDate = DateTime.now();
+  final fireStore = FirebaseFirestore.instance;
+
   @override
   Widget build(BuildContext context) {
-    TextEditingController address1Controller = TextEditingController();
-    TextEditingController address2Controller = TextEditingController();
-    TextEditingController address3Controller = TextEditingController();
-    TextEditingController postalCodeController = TextEditingController();
-    TextEditingController serielController = TextEditingController();
-    TextEditingController nameController = TextEditingController();
-    DateTime selectedDate = DateTime.now();
     mq = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: MyColors.blackColor,
@@ -38,14 +43,9 @@ class _CustomerdetailsState extends State<Customerdetails> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
-              Text("Date Completed",
-                  style: TextStyle(color: MyColors.whiteColor)),
-              SizedBox(
-                height: mq.height * 0.04,
-              ),
+              SizedBox(height: mq.height * 0.01),
+              Text("Expiry date", style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.04),
               GestureDetector(
                 onTap: () async {
                   await showCupertinoModalPopup(
@@ -92,14 +92,10 @@ class _CustomerdetailsState extends State<Customerdetails> {
                   ),
                 ),
               ),
-              SizedBox(
-                height: mq.height * 0.04,
-              ),
+              SizedBox(height: mq.height * 0.04),
               Text("Certificate Serial No./Ref.",
                   style: TextStyle(color: MyColors.whiteColor)),
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
+              SizedBox(height: mq.height * 0.01),
               SizedBox(
                 width: 350,
                 child: TextFormField(
@@ -109,9 +105,20 @@ class _CustomerdetailsState extends State<Customerdetails> {
                       const InputDecoration(border: OutlineInputBorder()),
                 ),
               ),
+              SizedBox(height: mq.height * 0.03),
+              SizedBox(height: mq.height * 0.01),
+              Text("Name", style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.01),
               SizedBox(
-                height: mq.height * 0.03,
+                width: 350,
+                child: TextFormField(
+                  controller: nameController,
+                  style: TextStyle(color: MyColors.whiteColor),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                ),
               ),
+              SizedBox(height: mq.height * 0.01),
               Container(
                 width: mq.width * 0.22,
                 height: mq.height * 0.07,
@@ -127,29 +134,7 @@ class _CustomerdetailsState extends State<Customerdetails> {
                   ),
                 ),
               ),
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
-              Text("Name", style: TextStyle(color: MyColors.whiteColor)),
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
-              SizedBox(
-                width: 350,
-                child: TextFormField(
-                  controller: nameController,
-                  style: TextStyle(color: MyColors.whiteColor),
-                  decoration:
-                      const InputDecoration(border: OutlineInputBorder()),
-                ),
-              ),
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
-              Text("Address", style: TextStyle(color: MyColors.whiteColor)),
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
+              SizedBox(height: mq.height * 0.01),
               SizedBox(
                 width: 350,
                 child: TextFormField(
@@ -159,9 +144,7 @@ class _CustomerdetailsState extends State<Customerdetails> {
                       hintText: "Address 1", border: OutlineInputBorder()),
                 ),
               ),
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
+              SizedBox(height: mq.height * 0.01),
               SizedBox(
                 width: 350,
                 child: TextFormField(
@@ -171,9 +154,7 @@ class _CustomerdetailsState extends State<Customerdetails> {
                       hintText: "Address 2", border: OutlineInputBorder()),
                 ),
               ),
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
+              SizedBox(height: mq.height * 0.01),
               SizedBox(
                 width: 350,
                 child: TextFormField(
@@ -183,9 +164,7 @@ class _CustomerdetailsState extends State<Customerdetails> {
                       hintText: "Address 3", border: OutlineInputBorder()),
                 ),
               ),
-              SizedBox(
-                height: mq.height * 0.01,
-              ),
+              SizedBox(height: mq.height * 0.01),
               SizedBox(
                 width: 250,
                 child: TextFormField(
@@ -195,22 +174,30 @@ class _CustomerdetailsState extends State<Customerdetails> {
                       hintText: "Postal code", border: OutlineInputBorder()),
                 ),
               ),
-              SizedBox(
-                height: mq.height * 0.02,
-              ),
+              SizedBox(height: mq.height * 0.02),
               Purplebutton(
-                ontap: () {
-                  MyApis.customerDetails.add({
-                    "serial": serielController.text,
-                    "name": nameController.text,
-                    "address1": address1Controller.text,
-                    "address2": address2Controller.text,
-                    "address3": address3Controller.text,
-                    "postal_code": postalCodeController.text,
-                    "date_completed": "${selectedDate.toLocal()}".split(' ')[0],
+                ontap: () async {
+                  String customerId =
+                      DateTime.now().millisecondsSinceEpoch.toString();
+
+                  await fireStore.collection("data").add({
+                    "customerId": customerId,
+                    "customerSerial": serielController.text,
+                    "customerName": nameController.text,
+                    "customerAddress1": address1Controller.text,
+                    "customerAddress2": address2Controller.text,
+                    "customerAddress3": address3Controller.text,
+                    "customerPostal_code": postalCodeController.text,
+                    "currentDate":
+                        DateFormat('dd/MM/yyyy').format(selectedDate),
                   });
+
+                  Get.snackbar("Success", "Added successfully");
+                  Get.to(() => Contractordetails(
+                        docName: customerId.toString(),
+                      ));
                 },
-                text: "Generate Reference",
+                text: "Save",
               ),
             ],
           ),

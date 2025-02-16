@@ -1,8 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fire_safety_suffolk/Utils/Apis/apis.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
 import 'package:fire_safety_suffolk/Utils/purpleButton.dart';
+import 'package:fire_safety_suffolk/Views/HomePage/SavedReports/Saved_reports.dart';
+import 'package:fire_safety_suffolk/Views/OtherPages/Add_detectors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:intl/intl.dart';
 
 class CustomScrollOptionButton extends StatefulWidget {
   final List<String> options;
@@ -47,23 +53,26 @@ class _CustomScrollOptionButtonState extends State<CustomScrollOptionButton> {
                   isOpen = !isOpen;
                 });
               },
-              child: Container(
-                width: widget.width,
-                decoration: BoxDecoration(
-                  color: MyColors.blackColor,
-                  border: Border.all(color: MyColors.whiteColor),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(selectedOption, style: widget.textStyle),
-                      Icon(
-                        Icons.arrow_drop_down,
-                        color: MyColors.whiteColor,
-                      ),
-                    ],
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: widget.width,
+                  decoration: BoxDecoration(
+                    color: MyColors.blackColor,
+                    border: Border.all(color: MyColors.whiteColor),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(selectedOption, style: widget.textStyle),
+                        Icon(
+                          Icons.arrow_drop_down,
+                          color: MyColors.whiteColor,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -104,7 +113,11 @@ class _CustomScrollOptionButtonState extends State<CustomScrollOptionButton> {
 }
 
 class Detectors extends StatefulWidget {
-  const Detectors({super.key});
+  final docName;
+  final detectorId;
+  final detectorName;
+  const Detectors(
+      {super.key, this.docName, this.detectorName, this.detectorId});
 
   @override
   State<Detectors> createState() => _DetectorsState();
@@ -114,29 +127,93 @@ class _DetectorsState extends State<Detectors> {
   DateTime selectedDate = DateTime.now();
   final Map<String, String> selectedValues = {};
 
-  Future<void> saveToFirestore() async {
-    try {
-      await FirebaseFirestore.instance.collection('detectors').add({
-        'Location': selectedValues['Location'] ?? 'N/A',
-        'Type': selectedValues['Type'] ?? 'N/A',
-        'ID NO': selectedValues['ID NO'] ?? 'N/A',
-        'Function test P/F': selectedValues['Function test P/F'] ?? 'N/A',
-        'Push button test': selectedValues['Push button test'] ?? 'N/A',
-        'System silence check': selectedValues['System silence check'] ?? 'N/A',
-        'Exp date': selectedDate.toIso8601String(),
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data saved successfully')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving data: $e')),
-      );
-    }
-  }
+  final fireStore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController idController = TextEditingController();
+    TextEditingController locationController = TextEditingController();
+    Future<void> saveToFirestore() async {
+      try {
+        // Validation checks for required fields
+        if (locationController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location is required')),
+          );
+          return;
+        }
+        if (selectedValues['Type'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Type is required')),
+          );
+          return;
+        }
+        if (idController.text.trim().isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('ID NO is required')),
+          );
+          return;
+        }
+        if (selectedValues['Function test PF'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Function test PF is required')),
+          );
+          return;
+        }
+        if (selectedValues['Push button test'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Push button test is required')),
+          );
+          return;
+        }
+        if (selectedValues['System silence check'] == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('System silence check is required')),
+          );
+          return;
+        }
+
+        // Format the date to "Month Year" (e.g., "October 2025")
+        String formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
+
+        // Save data to Firestore
+        await fireStore
+            .collection("data")
+            .doc(widget.docName)
+            .collection("details")
+            .doc(widget.detectorName)
+            .set({
+          "detectors": widget.detectorName,
+          "number": widget.detectorId,
+          'Location': locationController.text.trim(),
+          'Type': selectedValues['Type']!,
+          'ID NO': idController.text.trim(),
+          'Function test PF': selectedValues['Function test PF']!,
+          'Push button test': selectedValues['Push button test']!,
+          'System silence check': selectedValues['System silence check']!,
+          'date_completed': formattedDate,
+        });
+
+        Get.to(() => AddDetectors(docName: widget.docName));
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Data saved successfully')),
+        );
+
+        // Clear the fields after successful submission
+        locationController.clear();
+        idController.clear();
+        setState(() {
+          selectedValues.clear();
+          selectedDate = DateTime.now();
+        });
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error saving data: $e')),
+        );
+      }
+    }
+
     final mq = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -156,9 +233,18 @@ class _DetectorsState extends State<Detectors> {
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: Align(
                   alignment: Alignment.centerRight,
-                  child: Text(
-                    "Save",
-                    style: TextStyle(color: MyColors.whiteColor, fontSize: 24),
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SavedReports()));
+                    },
+                    child: Text(
+                      "Check the report",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 24),
+                    ),
                   ),
                 ),
               ),
@@ -202,13 +288,20 @@ class _DetectorsState extends State<Detectors> {
                           TextStyle(color: MyColors.whiteColor, fontSize: 16),
                     ),
                   ),
-                  CustomScrollOptionButton(
-                    options: const ["Pass", "Fail", "N/A", "None"],
-                    onValueSelected: (selectedValue) {
-                      selectedValues['Location'] = selectedValue;
-                    },
-                    textStyle:
-                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SizedBox(
+                        width: 350,
+                        child: TextFormField(
+                          controller: locationController,
+                          style: TextStyle(color: MyColors.whiteColor),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder()),
+                        ),
+                      ),
+                    ),
                   ),
                   Align(
                     alignment: Alignment.centerLeft,
@@ -219,7 +312,13 @@ class _DetectorsState extends State<Detectors> {
                     ),
                   ),
                   CustomScrollOptionButton(
-                    options: const ["A", "B", "C", "D"],
+                    options: const [
+                      "Smoke",
+                      "Heat",
+                      "Call point",
+                      "CO",
+                      "Other"
+                    ],
                     onValueSelected: (selectedValue) {
                       selectedValues['Type'] = selectedValue;
                     },
@@ -234,26 +333,33 @@ class _DetectorsState extends State<Detectors> {
                           TextStyle(color: MyColors.whiteColor, fontSize: 16),
                     ),
                   ),
-                  CustomScrollOptionButton(
-                    options: const ["A", "B", "C", "D"],
-                    onValueSelected: (selectedValue) {
-                      selectedValues['ID NO'] = selectedValue;
-                    },
-                    textStyle:
-                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SizedBox(
+                        width: 350,
+                        child: TextFormField(
+                          controller: idController,
+                          style: TextStyle(color: MyColors.whiteColor),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder()),
+                        ),
+                      ),
+                    ),
                   ),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "Function test P/F",
+                      "Function test PF",
                       style:
                           TextStyle(color: MyColors.whiteColor, fontSize: 16),
                     ),
                   ),
                   CustomScrollOptionButton(
-                    options: const ["A", "B", "C", "D"],
+                    options: const ["Pass", "Fail", "N/A", "None"],
                     onValueSelected: (selectedValue) {
-                      selectedValues['Function test P/F'] = selectedValue;
+                      selectedValues['Function test PF'] = selectedValue;
                     },
                     textStyle:
                         TextStyle(color: MyColors.whiteColor, fontSize: 16),
@@ -267,7 +373,7 @@ class _DetectorsState extends State<Detectors> {
                     ),
                   ),
                   CustomScrollOptionButton(
-                    options: const ["A", "B", "C", "D"],
+                    options: const ["Pass", "Fail", "N/A", "None"],
                     onValueSelected: (selectedValue) {
                       selectedValues['Push button test'] = selectedValue;
                     },
@@ -283,7 +389,7 @@ class _DetectorsState extends State<Detectors> {
                     ),
                   ),
                   CustomScrollOptionButton(
-                    options: const ["A", "B", "C", "D"],
+                    options: const ["Pass", "Fail", "N/A", "None"],
                     onValueSelected: (selectedValue) {
                       selectedValues['System silence check'] = selectedValue;
                     },
@@ -293,7 +399,7 @@ class _DetectorsState extends State<Detectors> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "Exp date",
+                      "Date completed",
                       style:
                           TextStyle(color: MyColors.whiteColor, fontSize: 16),
                     ),

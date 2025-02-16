@@ -1,16 +1,18 @@
 import 'dart:io';
 
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:fire_safety_suffolk/Utils/Apis/apis.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
 import 'package:fire_safety_suffolk/Utils/purpleButton.dart';
+import 'package:fire_safety_suffolk/Views/OtherPages/Add_detectors.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 
 import '../../main.dart';
 
 class Contractordetails extends StatefulWidget {
-  const Contractordetails({super.key});
+  final String docName;
+  const Contractordetails({super.key, required this.docName});
 
   @override
   State<Contractordetails> createState() => _ContractordetailsState();
@@ -22,54 +24,75 @@ class _ContractordetailsState extends State<Contractordetails> {
   final address1Controller = TextEditingController();
   final address2Controller = TextEditingController();
   final address3Controller = TextEditingController();
+  final additionalComments = TextEditingController();
+  final postalCode = TextEditingController();
   File? _signatureImage;
   String? _signatureImageUrl;
 
-  Future<void> _pickSignatureImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _signatureImage = File(pickedFile.path);
-      });
-    }
-  }
+  @override
+  void initState() {
+    super.initState();
 
-  Future<void> _uploadSignatureImage() async {
-    if (_signatureImage == null) return;
-
-    final fileName = 'signatures/${DateTime.now().millisecondsSinceEpoch}.png';
-    final storageRef = FirebaseStorage.instance.ref().child(fileName);
-
-    try {
-      final uploadTask = await storageRef.putFile(_signatureImage!);
-      final downloadUrl = await uploadTask.ref.getDownloadURL();
-      setState(() {
-        _signatureImageUrl = downloadUrl;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload signature: $e')),
-      );
-    }
+    // Setting default values for text fields
+    engineerController.text = "Steven Mitchel";
+    accredentialDetailsController.text = "Enter Accreditation Details";
+    address1Controller.text = "22 Turrell Drive";
+    address2Controller.text = "Kessingland";
+    address3Controller.text = "NR33 7UA";
+    additionalComments.text = "None";
+    postalCode.text = "7612";
   }
 
   void _generateReference() async {
-    await _uploadSignatureImage();
+    DateTime dateTime = DateTime.now();
+    String formattedDate = DateFormat('dd/MM/yyyy').format(dateTime);
 
-    MyApis.contractorDetails.add({
-      "engineer": engineerController.text,
-      "accredentials": accredentialDetailsController.text,
-      "address1": address1Controller.text,
-      "address2": address2Controller.text,
-      "address3": address3Controller.text,
-      "signatureUrl": _signatureImageUrl, // Store the signature URL
+    await fireStore
+        .collection("data")
+        .doc(widget.docName)
+        .collection("ContractorDetails")
+        .doc()
+        .set({
+      "customerId": widget.docName,
+      "contractorEngineer": engineerController.text,
+      "contractorAccredentials": accredentialDetailsController.text,
+      "contractorAddress1": address1Controller.text,
+      "contractorAddress2": address2Controller.text,
+      "contractorAddress3": address3Controller.text,
+      "contractorSignatureUrl": _signatureImageUrl,
+      "currentDate": formattedDate,
+      "additionalComments": additionalComments.text,
+      "postalCode": postalCode.text
     });
 
+    Get.to(() => AddDetectors(docName: widget.docName));
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Reference Generated Successfully')),
+      SnackBar(
+        content: Text('Reference Generated Successfully ${widget.docName}'),
+      ),
     );
   }
+
+  Widget _buildTextField(
+      {required TextEditingController controller,
+      required String hintText,
+      bool isMultiline = false}) {
+    return SizedBox(
+      width: 350,
+      child: TextFormField(
+        controller: controller,
+        maxLines: isMultiline ? null : 1,
+        style: TextStyle(color: MyColors.whiteColor),
+        decoration: InputDecoration(
+          hintText: hintText,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
+  final fireStore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +101,10 @@ class _ContractordetailsState extends State<Contractordetails> {
       backgroundColor: MyColors.blackColor,
       appBar: AppBar(
         backgroundColor: MyColors.redColor,
-        title: Text("Details of Contractor",
-            style: TextStyle(color: MyColors.whiteColor)),
+        title: Text(
+          "Details of Contractor",
+          style: TextStyle(color: MyColors.whiteColor),
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -95,90 +120,38 @@ class _ContractordetailsState extends State<Contractordetails> {
               Text("Engineer (Capitals)",
                   style: TextStyle(color: MyColors.whiteColor)),
               SizedBox(height: mq.height * 0.01),
-              SizedBox(
-                width: 350,
-                child: TextFormField(
-                  controller: engineerController,
-                  style: TextStyle(color: MyColors.whiteColor),
-                  decoration:
-                      const InputDecoration(border: OutlineInputBorder()),
-                ),
-              ),
-              SizedBox(height: mq.height * 0.01),
-              Text("Signature", style: TextStyle(color: MyColors.whiteColor)),
-              SizedBox(height: mq.height * 0.01),
-              Row(
-                children: [
-                  IconButton(
-                    icon: Icon(Icons.upload_file, color: MyColors.whiteColor),
-                    onPressed: _pickSignatureImage,
-                  ),
-                  if (_signatureImage != null)
-                    Text("Signature Selected",
-                        style: TextStyle(color: MyColors.greenColor)),
-                ],
-              ),
+              _buildTextField(
+                  controller: engineerController, hintText: "Engineer Name"),
               SizedBox(height: mq.height * 0.01),
               Text("Accreditation details",
                   style: TextStyle(color: MyColors.whiteColor)),
               SizedBox(height: mq.height * 0.01),
-              SizedBox(
-                width: 350,
-                child: TextField(
+              _buildTextField(
                   controller: accredentialDetailsController,
-                  style: TextStyle(color: MyColors.whiteColor),
-                  decoration:
-                      const InputDecoration(border: OutlineInputBorder()),
-                ),
-              ),
+                  hintText: "Accreditation Details"),
               SizedBox(height: mq.height * 0.01),
-              Text("Date", style: TextStyle(color: MyColors.whiteColor)),
+              _buildTextField(
+                  controller: additionalComments,
+                  hintText: "Additional Comments",
+                  isMultiline: true),
               SizedBox(height: mq.height * 0.01),
               Text("Contractor details",
                   style: TextStyle(color: MyColors.whiteColor)),
               SizedBox(height: mq.height * 0.01),
-              SizedBox(
-                width: 350,
-                child: TextFormField(
-                  controller: address1Controller,
-                  style: TextStyle(color: MyColors.whiteColor),
-                  decoration: const InputDecoration(
-                      hintText: "Address 1", border: OutlineInputBorder()),
-                ),
-              ),
+              _buildTextField(
+                  controller: address1Controller, hintText: "Address 1"),
               SizedBox(height: mq.height * 0.01),
-              SizedBox(
-                width: 350,
-                child: TextField(
-                  controller: address2Controller,
-                  style: TextStyle(color: MyColors.whiteColor),
-                  decoration: const InputDecoration(
-                      hintText: "Address 2", border: OutlineInputBorder()),
-                ),
-              ),
+              _buildTextField(
+                  controller: address2Controller, hintText: "Address 2"),
               SizedBox(height: mq.height * 0.01),
-              SizedBox(
-                width: 350,
-                child: TextField(
-                  controller: address3Controller,
-                  style: TextStyle(color: MyColors.whiteColor),
-                  decoration: const InputDecoration(
-                      hintText: "Address 3", border: OutlineInputBorder()),
-                ),
-              ),
+              _buildTextField(
+                  controller: address3Controller, hintText: "Address 3"),
               SizedBox(height: mq.height * 0.01),
-              SizedBox(
-                width: 250,
-                child: TextField(
-                  style: TextStyle(color: MyColors.whiteColor),
-                  decoration: const InputDecoration(
-                      hintText: "Postal code", border: OutlineInputBorder()),
-                ),
-              ),
+              _buildTextField(controller: postalCode, hintText: "Postal code"),
               SizedBox(height: mq.height * 0.02),
               Purplebutton(
                 ontap: _generateReference,
-                text: "Generate Reference",
+                text: "Save",
               ),
             ],
           ),

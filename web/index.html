@@ -31,7 +31,27 @@
 
   <title>fire_safety_suffolk</title>
   <link rel="manifest" href="manifest.json">
+
 </head>
+<script type ="module">
+  // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+apiKey: "AIzaSyCuL4G8J9Y1rcKQ4gPaaswXLX6ElMLUwuk",
+authDomain: "fire-safety-6370b.firebaseapp.com",
+projectId: "fire-safety-6370b",
+storageBucket: "fire-safety-6370b.firebasestorage.app",
+messagingSenderId: "850741063556",
+appId: "1:850741063556:web:e9395f3ae7cbd1fc0837d1"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+</script>
 <body>
   <script src="flutter_bootstrap.js" async></script>
 </body>

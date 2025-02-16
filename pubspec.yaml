@@ -40,6 +40,10 @@ dependencies:
   cloud_firestore: ^5.5.1
   image_picker: ^1.1.2
   firebase_storage: ^12.3.7
+  flutter_pdfview: ^1.3.4
+  pdf_viewer_plugin: ^2.0.1
+  syncfusion_flutter_pdf: ^28.1.35
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
@@ -65,7 +69,10 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - Assets/images/
+    - assets/images/
+    - assets/empty_document.pdf
+    - assets/fonts/arial.ttf
+    - assets/fonts/arial_bold.ttf
     # - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
