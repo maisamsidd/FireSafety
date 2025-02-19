@@ -65,7 +65,7 @@ class _ContractordetailsReportState extends State<ContractordetailsReport> {
     //   "postalCode": postalCode.text
     // });
 
-    Get.to(() => AddDetectorsDetails(docName: widget.customerId));
+    Get.to(() => AddDetectorsDetailsSaved(docName: widget.customerId));
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

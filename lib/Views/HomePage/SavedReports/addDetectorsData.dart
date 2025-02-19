@@ -5,17 +5,18 @@ import 'package:fire_safety_suffolk/Views/OtherPages/detectors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AddDetectorsDetails extends StatefulWidget {
+class AddDetectorsDetailsSaved extends StatefulWidget {
   final String docName;
-  const AddDetectorsDetails({super.key, required this.docName});
+  const AddDetectorsDetailsSaved({super.key, required this.docName});
 
   @override
-  State<AddDetectorsDetails> createState() => _AddDetectorsDetailsState();
+  State<AddDetectorsDetailsSaved> createState() =>
+      _AddDetectorsDetailsSavedState();
 }
 
 String detector = "Detectors";
 
-class _AddDetectorsDetailsState extends State<AddDetectorsDetails> {
+class _AddDetectorsDetailsSavedState extends State<AddDetectorsDetailsSaved> {
   final fireStore = FirebaseFirestore.instance;
 
   @override

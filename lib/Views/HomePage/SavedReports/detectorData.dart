@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
 import 'package:fire_safety_suffolk/Utils/purpleButton.dart';
+import 'package:fire_safety_suffolk/Views/HomePage/SavedReports/addDetectorsData.dart';
 import 'package:fire_safety_suffolk/Views/HomePage/SavedReports/contractor_details.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -27,7 +28,7 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
 
   DateTime selectedDate = DateTime.now();
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
-  String? documentId; // To store the Firestore document ID
+  bool isNewDocument = false; // To track if the document is new
 
   @override
   void initState() {
@@ -58,21 +59,49 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
           }
         });
       } else {
-        Get.snackbar("Error", "No data found for this customer");
+        // If no data is found, initialize fields as empty
+        setState(() {
+          isNewDocument = true;
+        });
+        Get.snackbar("Info", "No data found. You can add new data.");
       }
     } catch (e) {
       Get.snackbar("Error", "Failed to fetch data: $e");
     }
   }
 
-  // Function to update Firestore
-  Future<void> updateFirestore(String field, String value) async {
-    await firestore
-        .collection('customers')
-        .doc(widget.customerId)
-        .collection('detectors')
-        .doc(widget.detectorName)
-        .update({field: value});
+  // Function to save or update Firestore
+  Future<void> saveOrUpdateFirestore() async {
+    try {
+      Map<String, dynamic> data = {
+        "Location": locationController.text,
+        "Type": typeController.text,
+        "ID NO": id3Controller.text,
+        "Function test PF": functionTestController.text,
+        "Push button test": pushController.text,
+        "System silence check": systemController.text,
+        "date_completed": dateController.text,
+        "currentDate": selectedDate,
+      };
+
+      if (isNewDocument) {
+        // Create a new document
+        await firestore
+            .collection(widget.customerId)
+            .doc(widget.detectorName)
+            .set(data);
+        Get.snackbar("Success", "Data added successfully");
+      } else {
+        // Update existing document
+        await firestore
+            .collection(widget.customerId)
+            .doc(widget.detectorName)
+            .update(data);
+        Get.snackbar("Success", "Data updated successfully");
+      }
+    } catch (e) {
+      Get.snackbar("Error", "Failed to save data: $e");
+    }
   }
 
   @override
@@ -108,9 +137,6 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
                   style: TextStyle(color: MyColors.whiteColor),
                   decoration:
                       const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (value) {
-                    updateFirestore("Location", value);
-                  },
                 ),
               ),
               SizedBox(height: mq.height * 0.02),
@@ -123,9 +149,6 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
                   style: TextStyle(color: MyColors.whiteColor),
                   decoration:
                       const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (value) {
-                    updateFirestore("Type", value);
-                  },
                 ),
               ),
               SizedBox(height: mq.height * 0.02),
@@ -138,9 +161,6 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
                   style: TextStyle(color: MyColors.whiteColor),
                   decoration:
                       const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (value) {
-                    updateFirestore("ID NO", value);
-                  },
                 ),
               ),
               SizedBox(height: mq.height * 0.02),
@@ -154,9 +174,6 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
                   style: TextStyle(color: MyColors.whiteColor),
                   decoration:
                       const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (value) {
-                    updateFirestore("Function test PF", value);
-                  },
                 ),
               ),
               SizedBox(height: mq.height * 0.02),
@@ -170,9 +187,6 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
                   style: TextStyle(color: MyColors.whiteColor),
                   decoration:
                       const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (value) {
-                    updateFirestore("Push button test", value);
-                  },
                 ),
               ),
               SizedBox(height: mq.height * 0.02),
@@ -186,9 +200,6 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
                   style: TextStyle(color: MyColors.whiteColor),
                   decoration:
                       const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (value) {
-                    updateFirestore("System silence check", value);
-                  },
                 ),
               ),
               SizedBox(height: mq.height * 0.02),
@@ -202,23 +213,47 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
                   style: TextStyle(color: MyColors.whiteColor),
                   decoration:
                       const InputDecoration(border: OutlineInputBorder()),
-                  onChanged: (value) {
-                    updateFirestore("date_completed", value);
-                  },
                 ),
+              ),
+              SizedBox(height: mq.height * 0.02),
+              Purplebutton(
+                ontap: () async {
+                  await saveOrUpdateFirestore();
+                },
+                text: "Save Data",
               ),
               SizedBox(height: mq.height * 0.02),
               Purplebutton(
                 ontap: () async {
                   Get.to(() =>
                       ContractordetailsReport(customerId: widget.customerId));
-                  Get.snackbar("Success", "Data updated successfully");
                 },
                 text: "Contractor information",
               ),
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              Get.to(() => AddDetectorsDetailsSaved(docName: widget.customerId),
+                  transition: Transition.rightToLeft);
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: MyColors.greenColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              width: mq.width * 0.15,
+              height: mq.height * 0.05,
+              child: Center(
+                child: Text("Back"),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
