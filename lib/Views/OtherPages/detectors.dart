@@ -461,6 +461,27 @@ class _DetectorsState extends State<Detectors> {
           ],
         ),
       ),
+      bottomNavigationBar: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              Get.to(() => AddDetectors(docName: widget.docName),
+                  transition: Transition.rightToLeft);
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: MyColors.greenColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              width: mq.width * 0.15,
+              height: mq.height * 0.05,
+              child: Center(
+                child: Text("Back"),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

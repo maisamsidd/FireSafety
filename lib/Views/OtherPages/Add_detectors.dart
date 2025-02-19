@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
+import 'package:fire_safety_suffolk/Views/OtherPages/ContractorDetails.dart';
 import 'package:fire_safety_suffolk/Views/OtherPages/detectors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -153,6 +154,28 @@ class _AddDetectorsState extends State<AddDetectors> {
                   },
                 );
               },
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              Get.to(() => Contractordetails(
+                    docName: widget.docName,
+                  ));
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: MyColors.greenColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              width: mq.width * 0.15,
+              height: mq.height * 0.05,
+              child: Center(
+                child: Text("Back"),
+              ),
             ),
           ),
         ],

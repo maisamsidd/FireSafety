@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
+import 'package:fire_safety_suffolk/Views/HomePage/SavedReports/detectorData.dart';
 import 'package:fire_safety_suffolk/Views/OtherPages/detectors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -58,9 +59,8 @@ class _AddDetectorsDetailsState extends State<AddDetectorsDetails> {
                     return ListTile(
                       title: InkWell(
                         onTap: () {
-                          Get.to(() => Detectors(
-                                docName: widget.docName,
-                                detectorId: detectorId,
+                          Get.to(() => DetectordataSaved(
+                                customerId: widget.docName,
                                 detectorName: detectorName,
                               ));
                         },

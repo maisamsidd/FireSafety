@@ -1,502 +1,223 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fire_safety_suffolk/Utils/Apis/apis.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
 import 'package:fire_safety_suffolk/Utils/purpleButton.dart';
-import 'package:fire_safety_suffolk/Views/HomePage/SavedReports/Saved_reports.dart';
-import 'package:fire_safety_suffolk/Views/OtherPages/Add_detectors.dart';
-import 'package:fire_safety_suffolk/main.dart';
+import 'package:fire_safety_suffolk/Views/HomePage/SavedReports/contractor_details.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:intl/intl.dart';
 
-class CustomScrollOptionButton extends StatefulWidget {
-  final List<String> options;
-  final double width;
-  final TextStyle textStyle;
-  final Function(String) onValueSelected;
-  final String? initialValue;
-
-  const CustomScrollOptionButton({
-    super.key,
-    required this.options,
-    required this.onValueSelected,
-    this.width = 370,
-    this.textStyle = const TextStyle(),
-    this.initialValue,
-  });
+class DetectordataSaved extends StatefulWidget {
+  final String customerId;
+  final String detectorName;
+  const DetectordataSaved(
+      {super.key, required this.customerId, required this.detectorName});
 
   @override
-  State<CustomScrollOptionButton> createState() =>
-      _CustomScrollOptionButtonState();
+  State<DetectordataSaved> createState() => _DetectordataSavedState();
 }
 
-class _CustomScrollOptionButtonState extends State<CustomScrollOptionButton> {
-  bool isOpen = false;
-  late String selectedOption;
-
-  @override
-  void initState() {
-    super.initState();
-    selectedOption = widget.initialValue ?? widget.options.first;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: InkWell(
-              onTap: () {
-                setState(() {
-                  isOpen = !isOpen;
-                });
-              },
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: widget.width,
-                  decoration: BoxDecoration(
-                    color: MyColors.blackColor,
-                    border: Border.all(color: MyColors.whiteColor),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(selectedOption, style: widget.textStyle),
-                        Icon(
-                          Icons.arrow_drop_down,
-                          color: MyColors.whiteColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          if (isOpen)
-            SizedBox(
-              height: 200, // Adjust the height as needed
-              child: ListView(
-                children: widget.options
-                    .map((option) => Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                selectedOption = option;
-                                isOpen = false;
-                              });
-                              widget.onValueSelected(selectedOption);
-                            },
-                            child: Container(
-                              width: widget.width,
-                              color: MyColors.blackColor,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(option, style: widget.textStyle),
-                              ),
-                            ),
-                          ),
-                        ))
-                    .toList(),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class DetectorsData extends StatefulWidget {
-  final docName;
-  final detectorId;
-  final detectorName;
-  const DetectorsData(
-      {super.key, this.docName, this.detectorName, this.detectorId});
-
-  @override
-  State<DetectorsData> createState() => _DetectorsDataState();
-}
-
-class _DetectorsDataState extends State<DetectorsData> {
-  DateTime selectedDate = DateTime.now();
-  final Map<String, String> selectedValues = {};
-
-  final fireStore = FirebaseFirestore.instance;
-
-  TextEditingController idController = TextEditingController();
+class _DetectordataSavedState extends State<DetectordataSaved> {
   TextEditingController locationController = TextEditingController();
+  TextEditingController typeController = TextEditingController();
+  TextEditingController id3Controller = TextEditingController();
+  TextEditingController functionTestController = TextEditingController();
+  TextEditingController pushController = TextEditingController();
+  TextEditingController systemController = TextEditingController();
+  TextEditingController dateController = TextEditingController();
+
+  DateTime selectedDate = DateTime.now();
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  String? documentId; // To store the Firestore document ID
 
   @override
   void initState() {
     super.initState();
-    fetchData();
+    fetchData(); // Fetch data when the widget initializes
   }
 
   Future<void> fetchData() async {
     try {
-      DocumentSnapshot doc = await fireStore
-          .collection(widget.docName)
+      // Query Firestore using the unique customerId and detectorName
+      DocumentSnapshot doc = await firestore
+          .collection(widget.customerId)
           .doc(widget.detectorName)
           .get();
 
       if (doc.exists) {
-        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
+        var data = doc.data() as Map<String, dynamic>;
         setState(() {
-          locationController.text = data['Location'] ?? '';
-          idController.text = data['ID NO'] ?? '';
-          selectedValues['Type'] = data['Type'] ?? '';
-          selectedValues['Function test PF'] = data['Function test PF'] ?? '';
-          selectedValues['Push button test'] = data['Push button test'] ?? '';
-          selectedValues['System silence check'] =
-              data['System silence check'] ?? '';
-          selectedDate = DateFormat('dd/MM/yyyy').parse(data['date_completed']);
+          locationController.text = data["Location"] ?? "";
+          typeController.text = data["Type"] ?? "";
+          id3Controller.text = data["ID NO"] ?? "";
+          functionTestController.text = data["Function test PF"] ?? "";
+          pushController.text = data["Push button test"] ?? "";
+          systemController.text = data["System silence check"] ?? "";
+          dateController.text = data["date_completed"] ?? "";
+          if (data["currentDate"] != null) {
+            selectedDate = (data["currentDate"] as Timestamp).toDate();
+          }
         });
+      } else {
+        Get.snackbar("Error", "No data found for this customer");
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching data: $e')),
-      );
+      Get.snackbar("Error", "Failed to fetch data: $e");
     }
   }
 
-  Future<void> saveToFirestore() async {
-    try {
-      // Validation checks for required fields
-      if (locationController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location is required')),
-        );
-        return;
-      }
-      if (selectedValues['Type'] == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Type is required')),
-        );
-        return;
-      }
-      if (idController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ID NO is required')),
-        );
-        return;
-      }
-      if (selectedValues['Function test PF'] == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Function test PF is required')),
-        );
-        return;
-      }
-      if (selectedValues['Push button test'] == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Push button test is required')),
-        );
-        return;
-      }
-      if (selectedValues['System silence check'] == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('System silence check is required')),
-        );
-        return;
-      }
-
-      // Format the date to "Month Year" (e.g., "October 2025")
-      String formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
-
-      // Save data to Firestore
-      await fireStore.collection(widget.docName).doc(widget.detectorName).set({
-        "detectors": widget.detectorName,
-        "number": widget.detectorId,
-        'Location': locationController.text.trim(),
-        'Type': selectedValues['Type']!,
-        'ID NO': idController.text.trim(),
-        'Function test PF': selectedValues['Function test PF']!,
-        'Push button test': selectedValues['Push button test']!,
-        'System silence check': selectedValues['System silence check']!,
-        'date_completed': formattedDate,
-      });
-
-      Get.to(() => AddDetectors(docName: widget.docName));
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Data saved successfully')),
-      );
-
-      // Clear the fields after successful submission
-      locationController.clear();
-      idController.clear();
-      setState(() {
-        selectedValues.clear();
-        selectedDate = DateTime.now();
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error saving data: $e')),
-      );
-    }
+  // Function to update Firestore
+  Future<void> updateFirestore(String field, String value) async {
+    await firestore
+        .collection('customers')
+        .doc(widget.customerId)
+        .collection('detectors')
+        .doc(widget.detectorName)
+        .update({field: value});
   }
 
   @override
   Widget build(BuildContext context) {
-    mq = MediaQuery.of(context).size;
+    var mq = MediaQuery.of(context).size;
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
+        backgroundColor: Colors.yellow,
         automaticallyImplyLeading: false,
-        backgroundColor: MyColors.redColor,
+        title: const Text(
+          "Customer Details",
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+        ),
       ),
-      backgroundColor: MyColors.blackColor,
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
-              height: mq.height * 0.1,
-              color: MyColors.redColor,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 25),
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const SavedReports()));
-                    },
-                    child: Text(
-                      "Check the report",
-                      style:
-                          TextStyle(color: MyColors.whiteColor, fontSize: 24),
-                    ),
-                  ),
+      body: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: mq.height * 0.01),
+              Text("Location", style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.01),
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: locationController,
+                  style: TextStyle(color: MyColors.whiteColor),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                  onChanged: (value) {
+                    updateFirestore("Location", value);
+                  },
                 ),
               ),
-            ),
-            Container(
-              width: double.infinity,
-              height: mq.height * 0.1,
-              color: MyColors.greYColor,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    children: [
-                      Text(
-                        "Detectors",
-                        style:
-                            TextStyle(color: MyColors.whiteColor, fontSize: 24),
-                      ),
-                      SizedBox(
-                        width: mq.width * 0.3,
-                      ),
-                      Purplebutton(
-                        text: "Add to database",
-                        ontap: saveToFirestore,
-                      )
-                    ],
-                  ),
+              SizedBox(height: mq.height * 0.02),
+              Text("Type", style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.01),
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: typeController,
+                  style: TextStyle(color: MyColors.whiteColor),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                  onChanged: (value) {
+                    updateFirestore("Type", value);
+                  },
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Location",
-                      style:
-                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: SizedBox(
-                        width: 350,
-                        child: TextFormField(
-                          controller: locationController,
-                          style: TextStyle(color: MyColors.whiteColor),
-                          decoration: const InputDecoration(
-                              border: OutlineInputBorder()),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Type",
-                      style:
-                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    ),
-                  ),
-                  CustomScrollOptionButton(
-                    options: const [
-                      "Smoke",
-                      "Heat",
-                      "Call point",
-                      "CO",
-                      "Other"
-                    ],
-                    onValueSelected: (selectedValue) {
-                      selectedValues['Type'] = selectedValue;
-                    },
-                    textStyle:
-                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    initialValue: selectedValues['Type'],
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "ID NO :",
-                      style:
-                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: SizedBox(
-                        width: 350,
-                        child: TextFormField(
-                          controller: idController,
-                          style: TextStyle(color: MyColors.whiteColor),
-                          decoration: const InputDecoration(
-                              border: OutlineInputBorder()),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Function test PF",
-                      style:
-                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    ),
-                  ),
-                  CustomScrollOptionButton(
-                    options: const ["Pass", "Fail", "N/A", "None"],
-                    onValueSelected: (selectedValue) {
-                      selectedValues['Function test PF'] = selectedValue;
-                    },
-                    textStyle:
-                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    initialValue: selectedValues['Function test PF'],
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Push button test",
-                      style:
-                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    ),
-                  ),
-                  CustomScrollOptionButton(
-                    options: const ["Pass", "Fail", "N/A", "None"],
-                    onValueSelected: (selectedValue) {
-                      selectedValues['Push button test'] = selectedValue;
-                    },
-                    textStyle:
-                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    initialValue: selectedValues['Push button test'],
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "System silence check",
-                      style:
-                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    ),
-                  ),
-                  CustomScrollOptionButton(
-                    options: const ["Pass", "Fail", "N/A", "None"],
-                    onValueSelected: (selectedValue) {
-                      selectedValues['System silence check'] = selectedValue;
-                    },
-                    textStyle:
-                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    initialValue: selectedValues['System silence check'],
-                  ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Date completed",
-                      style:
-                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
-                    ),
-                  ),
-                  SizedBox(
-                    height: mq.height * 0.01,
-                  ),
-                  GestureDetector(
-                    onTap: () async {
-                      await showCupertinoModalPopup(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return Container(
-                            height: mq.height * 0.4,
-                            color: MyColors.greYColor,
-                            child: CupertinoDatePicker(
-                              mode: CupertinoDatePickerMode.date,
-                              initialDateTime: selectedDate,
-                              onDateTimeChanged: (DateTime newDate) {
-                                setState(() {
-                                  selectedDate = newDate;
-                                });
-                              },
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: MyColors.greYColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "${selectedDate.toLocal()}".split(' ')[0],
-                            style: TextStyle(
-                              color: MyColors.whiteColor,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Icon(
-                            Icons.calendar_today,
-                            color: MyColors.whiteColor,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+              SizedBox(height: mq.height * 0.02),
+              Text("ID NO", style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.01),
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: id3Controller,
+                  style: TextStyle(color: MyColors.whiteColor),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                  onChanged: (value) {
+                    updateFirestore("ID NO", value);
+                  },
+                ),
               ),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-          ],
+              SizedBox(height: mq.height * 0.02),
+              Text("Function Test PF",
+                  style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.01),
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: functionTestController,
+                  style: TextStyle(color: MyColors.whiteColor),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                  onChanged: (value) {
+                    updateFirestore("Function test PF", value);
+                  },
+                ),
+              ),
+              SizedBox(height: mq.height * 0.02),
+              Text("Push Button Test",
+                  style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.01),
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: pushController,
+                  style: TextStyle(color: MyColors.whiteColor),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                  onChanged: (value) {
+                    updateFirestore("Push button test", value);
+                  },
+                ),
+              ),
+              SizedBox(height: mq.height * 0.02),
+              Text("System Silence Check",
+                  style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.01),
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: systemController,
+                  style: TextStyle(color: MyColors.whiteColor),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                  onChanged: (value) {
+                    updateFirestore("System silence check", value);
+                  },
+                ),
+              ),
+              SizedBox(height: mq.height * 0.02),
+              Text("Date Completed",
+                  style: TextStyle(color: MyColors.whiteColor)),
+              SizedBox(height: mq.height * 0.01),
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: dateController,
+                  style: TextStyle(color: MyColors.whiteColor),
+                  decoration:
+                      const InputDecoration(border: OutlineInputBorder()),
+                  onChanged: (value) {
+                    updateFirestore("date_completed", value);
+                  },
+                ),
+              ),
+              SizedBox(height: mq.height * 0.02),
+              Purplebutton(
+                ontap: () async {
+                  Get.to(() =>
+                      ContractordetailsReport(customerId: widget.customerId));
+                  Get.snackbar("Success", "Data updated successfully");
+                },
+                text: "Contractor information",
+              ),
+            ],
+          ),
         ),
       ),
     );
