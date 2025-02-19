@@ -14,7 +14,7 @@ class Purplebutton extends StatelessWidget {
     return GestureDetector(
       onTap: ontap,
       child: Container(
-        width: mq.width * 0.22,
+        width: mq.width * 0.4,
         height: mq.height * 0.05,
         decoration: BoxDecoration(
             color: MyColors.purpleColor,

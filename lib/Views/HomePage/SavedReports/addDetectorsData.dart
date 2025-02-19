@@ -23,6 +23,7 @@ class _AddDetectorsDetailsState extends State<AddDetectorsDetails> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: MyColors.redColor,
         title: const Text("Add Detectors"),
       ),
@@ -32,9 +33,7 @@ class _AddDetectorsDetailsState extends State<AddDetectorsDetails> {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: fireStore
-                  .collection("data")
-                  .doc(widget.docName)
-                  .collection("details")
+                  .collection(widget.docName)
                   .orderBy("number")
                   .snapshots(),
               builder: (context, snapshot) {

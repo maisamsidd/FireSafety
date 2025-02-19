@@ -101,6 +101,7 @@ class _ContractordetailsReportState extends State<ContractordetailsReport> {
       backgroundColor: MyColors.blackColor,
       appBar: AppBar(
         backgroundColor: MyColors.redColor,
+        automaticallyImplyLeading: false,
         title: Text(
           "Details of Contractor",
           style: TextStyle(color: MyColors.whiteColor),

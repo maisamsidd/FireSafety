@@ -12,10 +12,59 @@ class AddDetectors extends StatefulWidget {
   State<AddDetectors> createState() => _AddDetectorsState();
 }
 
-String detector = "Detectors";
-
 class _AddDetectorsState extends State<AddDetectors> {
   final fireStore = FirebaseFirestore.instance;
+  bool isAddingDetector = false; // Prevent duplicate writes
+
+  Future<void> addDetector() async {
+    if (isAddingDetector) return; // Prevent multiple taps
+    setState(() {
+      isAddingDetector = true;
+    });
+
+    try {
+      // Fetch existing detectors
+      final snapshot =
+          await fireStore.collection(widget.docName).orderBy("number").get();
+
+      // Determine the next detector number
+      int nextNumber = 1;
+      if (snapshot.docs.isNotEmpty) {
+        nextNumber = snapshot.docs.last["number"] + 1;
+      }
+
+      String newDetector = "Detector $nextNumber";
+
+      // Check if the detector already exists
+      bool detectorExists = snapshot.docs.any((doc) =>
+          doc["detectors"].toString().toLowerCase() ==
+          newDetector.toLowerCase());
+
+      if (!detectorExists) {
+        // Add the new detector
+        await fireStore.collection(widget.docName).add({
+          "detectors": newDetector,
+          "number": nextNumber,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Detector added successfully')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Detector already exists')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        isAddingDetector = false; // Allow future writes
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,55 +74,13 @@ class _AddDetectorsState extends State<AddDetectors> {
       appBar: AppBar(
         backgroundColor: MyColors.redColor,
         title: const Text("Add Detectors"),
+        automaticallyImplyLeading: false,
       ),
       backgroundColor: MyColors.greYColor,
       body: Column(
         children: [
           GestureDetector(
-            onTap: () async {
-              try {
-                final snapshot = await fireStore
-                    .collection("data")
-                    .doc(widget.docName)
-                    .collection("details")
-                    .get();
-
-                int nextNumber = snapshot.docs.length + 1;
-                String newDetector = "Detector $nextNumber";
-
-                final existingDetector = await fireStore
-                    .collection("data")
-                    .doc(widget.docName)
-                    .collection("details")
-                    .doc(newDetector)
-                    .get();
-
-                if (!existingDetector.exists) {
-                  await fireStore
-                      .collection("data")
-                      .doc(widget.docName)
-                      .collection("details")
-                      .doc(newDetector)
-                      .set({
-                    "detectors": newDetector,
-                    "number": nextNumber,
-                  });
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Detector added successfully')),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Detector already exists')),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error: $e')),
-                );
-              }
-            },
+            onTap: addDetector,
             child: Container(
               width: double.infinity,
               height: mq.height * 0.1,
@@ -85,7 +92,13 @@ class _AddDetectorsState extends State<AddDetectors> {
                     borderRadius: BorderRadius.circular(12),
                     color: MyColors.purpleColor,
                   ),
-                  child: Text(
+                  child:
+                      // isAddingDetector
+                      //     ? const CircularProgressIndicator(
+                      //         color: Colors.white,
+                      //       )
+                      //     :
+                      Text(
                     "Add Detector",
                     style: TextStyle(
                       fontSize: 18,
@@ -99,9 +112,7 @@ class _AddDetectorsState extends State<AddDetectors> {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: fireStore
-                  .collection("data")
-                  .doc(widget.docName)
-                  .collection("details")
+                  .collection(widget.docName)
                   .orderBy("number")
                   .snapshots(),
               builder: (context, snapshot) {

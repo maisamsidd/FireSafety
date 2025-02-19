@@ -1,147 +1,502 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fire_safety_suffolk/Utils/Apis/apis.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
+import 'package:fire_safety_suffolk/Utils/purpleButton.dart';
+import 'package:fire_safety_suffolk/Views/HomePage/SavedReports/Saved_reports.dart';
+import 'package:fire_safety_suffolk/Views/OtherPages/Add_detectors.dart';
+import 'package:fire_safety_suffolk/main.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:intl/intl.dart';
 
-class DetectorsData extends StatefulWidget {
-  final String docName;
-  const DetectorsData({super.key, required this.docName});
+class CustomScrollOptionButton extends StatefulWidget {
+  final List<String> options;
+  final double width;
+  final TextStyle textStyle;
+  final Function(String) onValueSelected;
+  final String? initialValue;
+
+  const CustomScrollOptionButton({
+    super.key,
+    required this.options,
+    required this.onValueSelected,
+    this.width = 370,
+    this.textStyle = const TextStyle(),
+    this.initialValue,
+  });
 
   @override
-  State<DetectorsData> createState() => _CustDetectorsState();
+  State<CustomScrollOptionButton> createState() =>
+      _CustomScrollOptionButtonState();
 }
 
-class _CustDetectorsState extends State<DetectorsData> {
-  void _showEditDialog(
-      DocumentSnapshot doc, String field, String currentValue) {
-    final TextEditingController controller =
-        TextEditingController(text: currentValue);
+class _CustomScrollOptionButtonState extends State<CustomScrollOptionButton> {
+  bool isOpen = false;
+  late String selectedOption;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Edit $field'),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(hintText: "Enter new value for $field"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await doc.reference.update({field: controller.text});
-              Navigator.pop(context);
-            },
-            child: const Text("Save"),
-          ),
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    selectedOption = widget.initialValue ?? widget.options.first;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: MyColors.blackColor,
-      appBar: AppBar(
-        backgroundColor: MyColors.yellowColor,
-        title: Text(
-          "Detector Details",
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: MyColors.redColor,
-          ),
-        ),
-      ),
-      body: Column(
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Column(
         children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: MyApis.addDetectorsCollection
-                  .doc(widget.docName)
-                  .collection("detectorsData")
-                  .snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.hasError) {
-                  return const Center(
-                    child: Text(
-                      "An error occurred while fetching data.",
-                      style: TextStyle(color: Colors.red, fontSize: 18),
-                    ),
-                  );
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                final docs = snapshot.data?.docs ?? [];
-                if (docs.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      "No detectors found.",
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) {
-                    final data = docs[index];
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      color: MyColors.yellowColor.withOpacity(0.1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildEditableText(data, "Function test PF"),
-                            _buildEditableText(data, "ID NO"),
-                            _buildEditableText(data, "Location"),
-                            _buildEditableText(data, "Push button test"),
-                            _buildEditableText(data, "System silence check"),
-                            _buildEditableText(data, "Type"),
-                            _buildEditableText(data, "date_completed"),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  isOpen = !isOpen;
+                });
               },
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Container(
+                  width: widget.width,
+                  decoration: BoxDecoration(
+                    color: MyColors.blackColor,
+                    border: Border.all(color: MyColors.whiteColor),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(selectedOption, style: widget.textStyle),
+                        Icon(
+                          Icons.arrow_drop_down,
+                          color: MyColors.whiteColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
+          if (isOpen)
+            SizedBox(
+              height: 200, // Adjust the height as needed
+              child: ListView(
+                children: widget.options
+                    .map((option) => Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                selectedOption = option;
+                                isOpen = false;
+                              });
+                              widget.onValueSelected(selectedOption);
+                            },
+                            child: Container(
+                              width: widget.width,
+                              color: MyColors.blackColor,
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(option, style: widget.textStyle),
+                              ),
+                            ),
+                          ),
+                        ))
+                    .toList(),
+              ),
+            ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildEditableText(DocumentSnapshot doc, String field) {
-    final value = doc.get(field) ?? "N/A";
-    return GestureDetector(
-      onTap: () => _showEditDialog(doc, field, value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0),
-        child: Text(
-          "$field: $value",
-          style: TextStyle(
-            fontSize: 16,
-            color: MyColors.whiteColor,
-            fontWeight: FontWeight.w600,
-          ),
+class DetectorsData extends StatefulWidget {
+  final docName;
+  final detectorId;
+  final detectorName;
+  const DetectorsData(
+      {super.key, this.docName, this.detectorName, this.detectorId});
+
+  @override
+  State<DetectorsData> createState() => _DetectorsDataState();
+}
+
+class _DetectorsDataState extends State<DetectorsData> {
+  DateTime selectedDate = DateTime.now();
+  final Map<String, String> selectedValues = {};
+
+  final fireStore = FirebaseFirestore.instance;
+
+  TextEditingController idController = TextEditingController();
+  TextEditingController locationController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+  }
+
+  Future<void> fetchData() async {
+    try {
+      DocumentSnapshot doc = await fireStore
+          .collection(widget.docName)
+          .doc(widget.detectorName)
+          .get();
+
+      if (doc.exists) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+        setState(() {
+          locationController.text = data['Location'] ?? '';
+          idController.text = data['ID NO'] ?? '';
+          selectedValues['Type'] = data['Type'] ?? '';
+          selectedValues['Function test PF'] = data['Function test PF'] ?? '';
+          selectedValues['Push button test'] = data['Push button test'] ?? '';
+          selectedValues['System silence check'] =
+              data['System silence check'] ?? '';
+          selectedDate = DateFormat('dd/MM/yyyy').parse(data['date_completed']);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching data: $e')),
+      );
+    }
+  }
+
+  Future<void> saveToFirestore() async {
+    try {
+      // Validation checks for required fields
+      if (locationController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location is required')),
+        );
+        return;
+      }
+      if (selectedValues['Type'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Type is required')),
+        );
+        return;
+      }
+      if (idController.text.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ID NO is required')),
+        );
+        return;
+      }
+      if (selectedValues['Function test PF'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Function test PF is required')),
+        );
+        return;
+      }
+      if (selectedValues['Push button test'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Push button test is required')),
+        );
+        return;
+      }
+      if (selectedValues['System silence check'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('System silence check is required')),
+        );
+        return;
+      }
+
+      // Format the date to "Month Year" (e.g., "October 2025")
+      String formattedDate = DateFormat('dd/MM/yyyy').format(selectedDate);
+
+      // Save data to Firestore
+      await fireStore.collection(widget.docName).doc(widget.detectorName).set({
+        "detectors": widget.detectorName,
+        "number": widget.detectorId,
+        'Location': locationController.text.trim(),
+        'Type': selectedValues['Type']!,
+        'ID NO': idController.text.trim(),
+        'Function test PF': selectedValues['Function test PF']!,
+        'Push button test': selectedValues['Push button test']!,
+        'System silence check': selectedValues['System silence check']!,
+        'date_completed': formattedDate,
+      });
+
+      Get.to(() => AddDetectors(docName: widget.docName));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Data saved successfully')),
+      );
+
+      // Clear the fields after successful submission
+      locationController.clear();
+      idController.clear();
+      setState(() {
+        selectedValues.clear();
+        selectedDate = DateTime.now();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error saving data: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    mq = MediaQuery.of(context).size;
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: MyColors.redColor,
+      ),
+      backgroundColor: MyColors.blackColor,
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              height: mq.height * 0.1,
+              color: MyColors.redColor,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 25),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SavedReports()));
+                    },
+                    child: Text(
+                      "Check the report",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 24),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              height: mq.height * 0.1,
+              color: MyColors.greYColor,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    children: [
+                      Text(
+                        "Detectors",
+                        style:
+                            TextStyle(color: MyColors.whiteColor, fontSize: 24),
+                      ),
+                      SizedBox(
+                        width: mq.width * 0.3,
+                      ),
+                      Purplebutton(
+                        text: "Add to database",
+                        ontap: saveToFirestore,
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Location",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SizedBox(
+                        width: 350,
+                        child: TextFormField(
+                          controller: locationController,
+                          style: TextStyle(color: MyColors.whiteColor),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder()),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Type",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    ),
+                  ),
+                  CustomScrollOptionButton(
+                    options: const [
+                      "Smoke",
+                      "Heat",
+                      "Call point",
+                      "CO",
+                      "Other"
+                    ],
+                    onValueSelected: (selectedValue) {
+                      selectedValues['Type'] = selectedValue;
+                    },
+                    textStyle:
+                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    initialValue: selectedValues['Type'],
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "ID NO :",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: SizedBox(
+                        width: 350,
+                        child: TextFormField(
+                          controller: idController,
+                          style: TextStyle(color: MyColors.whiteColor),
+                          decoration: const InputDecoration(
+                              border: OutlineInputBorder()),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Function test PF",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    ),
+                  ),
+                  CustomScrollOptionButton(
+                    options: const ["Pass", "Fail", "N/A", "None"],
+                    onValueSelected: (selectedValue) {
+                      selectedValues['Function test PF'] = selectedValue;
+                    },
+                    textStyle:
+                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    initialValue: selectedValues['Function test PF'],
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Push button test",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    ),
+                  ),
+                  CustomScrollOptionButton(
+                    options: const ["Pass", "Fail", "N/A", "None"],
+                    onValueSelected: (selectedValue) {
+                      selectedValues['Push button test'] = selectedValue;
+                    },
+                    textStyle:
+                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    initialValue: selectedValues['Push button test'],
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "System silence check",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    ),
+                  ),
+                  CustomScrollOptionButton(
+                    options: const ["Pass", "Fail", "N/A", "None"],
+                    onValueSelected: (selectedValue) {
+                      selectedValues['System silence check'] = selectedValue;
+                    },
+                    textStyle:
+                        TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    initialValue: selectedValues['System silence check'],
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "Date completed",
+                      style:
+                          TextStyle(color: MyColors.whiteColor, fontSize: 16),
+                    ),
+                  ),
+                  SizedBox(
+                    height: mq.height * 0.01,
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      await showCupertinoModalPopup(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Container(
+                            height: mq.height * 0.4,
+                            color: MyColors.greYColor,
+                            child: CupertinoDatePicker(
+                              mode: CupertinoDatePickerMode.date,
+                              initialDateTime: selectedDate,
+                              onDateTimeChanged: (DateTime newDate) {
+                                setState(() {
+                                  selectedDate = newDate;
+                                });
+                              },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: MyColors.greYColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "${selectedDate.toLocal()}".split(' ')[0],
+                            style: TextStyle(
+                              color: MyColors.whiteColor,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Icon(
+                            Icons.calendar_today,
+                            color: MyColors.whiteColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+          ],
         ),
       ),
     );

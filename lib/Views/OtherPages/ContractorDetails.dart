@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fire_safety_suffolk/Utils/AppColors.dart';
 import 'package:fire_safety_suffolk/Utils/purpleButton.dart';
+import 'package:fire_safety_suffolk/Views/HomePage/home_page.dart';
 import 'package:fire_safety_suffolk/Views/OtherPages/Add_detectors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -100,6 +101,7 @@ class _ContractordetailsState extends State<Contractordetails> {
     return Scaffold(
       backgroundColor: MyColors.blackColor,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: MyColors.redColor,
         title: Text(
           "Details of Contractor",
@@ -149,13 +151,47 @@ class _ContractordetailsState extends State<Contractordetails> {
               SizedBox(height: mq.height * 0.01),
               _buildTextField(controller: postalCode, hintText: "Postal code"),
               SizedBox(height: mq.height * 0.02),
-              Purplebutton(
-                ontap: _generateReference,
-                text: "Save",
-              ),
+              // Purplebutton(
+              //   ontap: _generateReference,
+              //   text: "Save",
+              // ),
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              Get.to(() => HomePage());
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: MyColors.greenColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              width: mq.width * 0.15,
+              height: mq.height * 0.05,
+              child: Center(
+                child: Text("Back"),
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: _generateReference,
+            child: Container(
+              decoration: BoxDecoration(
+                color: MyColors.greenColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              width: mq.width * 0.15,
+              height: mq.height * 0.05,
+              child: Center(
+                child: Text("Next"),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }

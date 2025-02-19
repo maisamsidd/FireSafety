@@ -78,6 +78,7 @@ class _CustomerDataSavedState extends State<CustomerDataSaved> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.yellow,
+        automaticallyImplyLeading: false,
         title: const Text(
           "Customer Details",
           style: TextStyle(

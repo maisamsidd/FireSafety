@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fire_safety_suffolk/Utils/purpleButton.dart';
+import 'package:fire_safety_suffolk/Views/HomePage/home_page.dart';
 import 'package:fire_safety_suffolk/Views/OtherPages/ContractorDetails.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -33,6 +34,7 @@ class _CustomerdetailsState extends State<Customerdetails> {
       backgroundColor: MyColors.blackColor,
       appBar: AppBar(
         backgroundColor: MyColors.redColor,
+        automaticallyImplyLeading: false,
         title: Text("Details of Customers",
             style: TextStyle(color: MyColors.whiteColor)),
         centerTitle: true,
@@ -175,16 +177,32 @@ class _CustomerdetailsState extends State<Customerdetails> {
                 ),
               ),
               SizedBox(height: mq.height * 0.02),
-              Purplebutton(
-                ontap: () async {},
-                text: "Save",
-              ),
+              // Purplebutton(
+              //   ontap: () async {},
+              //   text: "Save",
+              // ),
             ],
           ),
         ),
       ),
       bottomNavigationBar: Row(
         children: [
+          InkWell(
+            onTap: () {
+              Get.to(() => HomePage());
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: MyColors.greenColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              width: mq.width * 0.15,
+              height: mq.height * 0.05,
+              child: Center(
+                child: Text("Back"),
+              ),
+            ),
+          ),
           InkWell(
             onTap: () async {
               String customerId =
@@ -211,7 +229,7 @@ class _CustomerdetailsState extends State<Customerdetails> {
                 color: MyColors.greenColor,
                 borderRadius: BorderRadius.circular(20),
               ),
-              width: mq.width * 0.1,
+              width: mq.width * 0.15,
               height: mq.height * 0.05,
               child: Center(
                 child: Text("Next"),

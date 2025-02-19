@@ -178,13 +178,11 @@ class _DetectorsState extends State<Detectors> {
 
         // Save data to Firestore
         await fireStore
-            .collection("data")
-            .doc(widget.docName)
-            .collection("details")
+            .collection(widget.docName)
             .doc(widget.detectorName)
             .set({
-          "detectors": widget.detectorName,
-          "number": widget.detectorId,
+          // "detectors": widget.detectorName,
+          // "number": widget.detectorId,
           'Location': locationController.text.trim(),
           'Type': selectedValues['Type']!,
           'ID NO': idController.text.trim(),
@@ -218,6 +216,7 @@ class _DetectorsState extends State<Detectors> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: MyColors.redColor,
       ),
       backgroundColor: MyColors.blackColor,
