@@ -18,20 +18,18 @@ const String docName = "Detector 1";
 Future<Map<String, dynamic>> fetchCertificateData(String docName) async {
   try {
     // Fetch detector details
-    final detectorCustomerSnapshot = await FirebaseFirestore.instance
-        .collection("addDetectorsCollection")
-        .doc(docName)
-        .collection("customerDetails")
-        .get();
+    final detectorCustomerSnapshot =
+        await FirebaseFirestore.instance.collection("data").get();
+
     final detectorContractorSnapshot = await FirebaseFirestore.instance
-        .collection("addDetectorsCollection")
-        .doc(docName)
+        .collection("data")
+        .doc("1740423589553")
         .collection("contractorDetails")
         .get();
 
     // Fetch detectors data
     final detectorsDataSnapshot = await FirebaseFirestore.instance
-        .collection("addDetectorsCollection")
+        .collection("1740423589553")
         .doc(docName)
         .collection("detectorsData")
         .get();
@@ -46,7 +44,7 @@ Future<Map<String, dynamic>> fetchCertificateData(String docName) async {
           "customerAddress2": doc.data()["customerAddress2"] ?? "N/A",
           "customerAddress3": doc.data()["customerAddress3"] ?? "N/A",
           "customerPostalCode": doc.data()["customerPostal_code"] ?? "N/A",
-          "customerdate": doc.data()["customerExpiry_date"] ?? "N/A",
+          "expiryDate": doc.data()["currentDate"] ?? "N/A",
         };
       }).toList(),
       "contractorDetails": detectorContractorSnapshot.docs.map((doc) {
@@ -148,7 +146,7 @@ class _PDFEditorState extends State<PDFEditor> {
     );
 
     graphics.drawString(
-      data["customerDetails"][0]["customerdate"],
+      data["customerDetails"][0]["expiryDate"],
       boldfont16,
       bounds: const Rect.fromLTWH(370, 655, 135, 30),
       format: PdfStringFormat(alignment: PdfTextAlignment.center),

@@ -223,13 +223,6 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
                 text: "Save Data",
               ),
               SizedBox(height: mq.height * 0.02),
-              Purplebutton(
-                ontap: () async {
-                  Get.to(() =>
-                      ContractordetailsReport(customerId: widget.customerId));
-                },
-                text: "Contractor information",
-              ),
             ],
           ),
         ),
@@ -250,6 +243,23 @@ class _DetectordataSavedState extends State<DetectordataSaved> {
               height: mq.height * 0.05,
               child: Center(
                 child: Text("Back"),
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () {
+              // Get.to(() => AddDetectorsDetailsSaved(docName: widget.customerId),
+              //     transition: Transition.rightToLeft);
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                color: MyColors.greenColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              width: mq.width * 0.15,
+              height: mq.height * 0.05,
+              child: Center(
+                child: Text("Generate pdf"),
               ),
             ),
           ),

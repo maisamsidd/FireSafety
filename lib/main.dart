@@ -1,6 +1,5 @@
-import 'package:fire_safety_suffolk/Views/HomePage/SavedReports/Saved_reports.dart';
 import 'package:fire_safety_suffolk/Views/HomePage/home_page.dart';
-import 'package:fire_safety_suffolk/Views/testings/Test_detector_data.dart';
+import 'package:fire_safety_suffolk/Widgets/pdf_generator.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -25,7 +24,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       theme: ThemeData(),
-      home: HomePage(),
+      home: PDFEditor(
+        docName: "1740423589553",
+      ),
       debugShowCheckedModeBanner: false,
     );
   }

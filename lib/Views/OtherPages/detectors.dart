@@ -180,9 +180,8 @@ class _DetectorsState extends State<Detectors> {
         await fireStore
             .collection(widget.docName)
             .doc(widget.detectorName)
-            .set({
-          // "detectors": widget.detectorName,
-          // "number": widget.detectorId,
+            .collection("detectorData")
+            .add({
           'Location': locationController.text.trim(),
           'Type': selectedValues['Type']!,
           'ID NO': idController.text.trim(),
